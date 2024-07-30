@@ -1,41 +1,54 @@
-const apiKey = '619e6a4b9b0fdcd81ba0fb1e23f81532'; // Your provided API key
-const defaultCity = 'London'; // Set your default city here
+let weather = {
+  apiKey: "619e6a4b9b0fdcd81ba0fb1e23f81532",
+  fetchWeather: function (city) {
+    fetch(
+      "https://api.openweathermap.org/data/2.5/weather?q=" +
+        city +
+        "&units=metric&appid=" +
+        this.apiKey
+    )
+      .then((response) => {
+        if (!response.ok) {
+          alert("No weather found.");
+          throw new Error("No weather found.");
+        }
+        return response.json();
+      })
+      .then((data) => this.displayWeather(data));
+  },
+  displayWeather: function (data) {
+    const { name } = data;
+    const { icon, description } = data.weather[0];
+    const { temp, humidity } = data.main;
+    const { speed } = data.wind;
+    document.querySelector(".city").innerText = "Weather in " + name;
+    document.querySelector(".icon").src =
+      "https://openweathermap.org/img/wn/" + icon + ".png";
+    document.querySelector(".description").innerText = description;
+    document.querySelector(".temp").innerText = temp + "°C";
+    document.querySelector(".humidity").innerText =
+      "Humidity: " + humidity + "%";
+    document.querySelector(".wind").innerText =
+      "Wind speed: " + speed + " km/h";
+    document.querySelector(".weather").classList.remove("loading");
+    document.body.style.backgroundImage =
+      "url('https://source.unsplash.com/1600x900/?" + name + "')";
+  },
+  search: function () {
+    this.fetchWeather(document.querySelector(".search-bar").value);
+  },
+};
 
-function fetchWeather(city) {
-    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
-
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log(data);
-            if (data.cod !== 200) {
-                throw new Error('Error: ' + data.message);
-            }
-            document.getElementById('city').textContent = data.name;
-            document.getElementById('description').textContent = data.weather[0].description;
-            document.getElementById('temperature').textContent = `${data.main.temp}°C`;
-        })
-        .catch(error => {
-            console.error('Error fetching the weather data:', error);
-            alert('Failed to fetch weather data. Please check the city name and try again.');
-        });
-}
-
-// Fetch weather for the default city on load
-fetchWeather(defaultCity);
-
-// Automatically update weather every 10 minutes (600000 milliseconds)
-setInterval(() => {
-    fetchWeather(defaultCity);
-}, 600000);
-
-// Event listener for search button
-document.getElementById('search-button').addEventListener('click', function() {
-    const city = document.getElementById('city-input').value;
-    fetchWeather(city);
+document.querySelector(".search button").addEventListener("click", function () {
+  weather.search();
 });
+
+document
+  .querySelector(".search-bar")
+  .addEventListener("keyup", function (event) {
+    if (event.key == "Enter") {
+      weather.search();
+    }
+  });
+
+weather.fetchWeather("Hyderabad");
